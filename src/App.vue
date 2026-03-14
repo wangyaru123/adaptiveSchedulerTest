@@ -1,13 +1,10 @@
 <template>
   <div id="app">
-    <Navigation />
-    <div class="content">
-      <RouterView />
-    </div>
+    <pretestFast50 />
   </div>
 </template>
 <script setup>
-import Navigation from './components/Navigation.vue'
+import pretestFast50 from './components/pretest/fast/50.vue'
 </script>
 
 
