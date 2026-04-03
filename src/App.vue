@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    <generateTestSet />
     <!-- <pretestFast50append /> -->
     <!-- <pretestFast200append /> -->
     <!-- <pretestFast1000append /> -->
@@ -11,7 +12,7 @@
     <!-- <pretestFast50towchange /> -->
     <!-- <pretestFast200towchange /> -->
     <!-- <pretestFast1000towchange /> -->
-    <pretestFast5000towchange />
+    <!-- <pretestFast5000towchange /> -->
     <!-- <pretestFast50delete /> -->
     <!-- <pretestFast200delete /> -->
     <!-- <pretestFast1000delete /> -->
@@ -51,6 +52,8 @@
   </div>
 </template>
 <script setup>
+
+import generateTestSet from './pages/generateTestSet.vue'
 // import pretestFast50append from './components/pretest/fast/50append.vue'
 // import pretestFast200append from './components/pretest/fast/200append.vue'
 // import pretestFast1000append from './components/pretest/fast/1000append.vue'
@@ -62,7 +65,7 @@
 // import pretestFast50towchange from './components/pretest/fast/50towchange.vue'
 // import pretestFast200towchange from './components/pretest/fast/200towchange.vue'
 // import pretestFast1000towchange from './components/pretest/fast/1000towchange.vue'
-import pretestFast5000towchange from './components/pretest/fast/5000towchange.vue'
+// import pretestFast5000towchange from './components/pretest/fast/5000towchange.vue'
 // import pretestFast50delete from './components/pretest/fast/50delete.vue'
 // import pretestFast200delete from './components/pretest/fast/200delete.vue'
 // import pretestFast1000delete from './components/pretest/fast/1000delete.vue'
