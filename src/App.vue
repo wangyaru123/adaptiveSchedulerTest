@@ -1,107 +1,58 @@
 <template>
   <div id="app">
-    <feedbackSimulation />
-    <!-- <pretestFast50append /> -->
-    <!-- <pretestFast200append /> -->
-    <!-- <pretestFast1000append /> -->
-    <!-- <pretestFast5000append /> -->
-    <!-- <pretestFast50insert /> -->
-    <!-- <pretestFast200insert /> -->
-    <!-- <pretestFast1000insert /> -->
-    <!-- <pretestFast5000insert /> -->
-    <!-- <pretestFast50towchange /> -->
-    <!-- <pretestFast200towchange /> -->
-    <!-- <pretestFast1000towchange /> -->
-    <!-- <pretestFast5000towchange /> -->
-    <!-- <pretestFast50delete /> -->
-    <!-- <pretestFast200delete /> -->
-    <!-- <pretestFast1000delete /> -->
-    <!-- <pretestFast5000delete /> -->
-    <!-- <pretestDoubleEnd50append /> -->
-    <!-- <pretestDoubleEnd200append /> -->
-    <!-- <pretestDoubleEnd1000append /> -->
-    <!-- <pretestDoubleEnd5000append /> -->
-    <!-- <pretestDoubleEnd50insert /> -->
-    <!-- <pretestDoubleEnd200insert /> -->
-    <!-- <pretestDoubleEnd1000insert /> -->
-    <!-- <pretestDoubleEnd5000insert /> -->
-    <!-- <pretestDoubleEnd50towchange /> -->
-    <!-- <pretestDoubleEnd200towchange /> -->
-    <!-- <pretestDoubleEnd1000towchange /> -->
-    <!-- <pretestDoubleEnd5000towchange /> -->
-    <!-- <pretestDoubleEnd50delete /> -->
-    <!-- <pretestDoubleEnd200delete /> -->
-    <!-- <pretestDoubleEnd1000delete /> -->
-    <!-- <pretestDoubleEnd5000delete /> -->
-    <!-- <pretestSimple50append /> -->
-    <!-- <pretestSimple200append /> -->
-    <!-- <pretestSimple1000append /> -->
-    <!-- <pretestSimple5000append /> -->
-    <!-- <pretestSimple50insert /> -->
-    <!-- <pretestSimple200insert /> -->
-    <!-- <pretestSimple1000insert /> -->
-    <!-- <pretestSimple5000insert /> -->
-    <!-- <pretestSimple50towchange /> -->
-    <!-- <pretestSimple200towchange /> -->
-    <!-- <pretestSimple1000towchange /> -->
-    <!-- <pretestSimple5000towchange /> -->
-    <!-- <pretestSimple50delete /> -->
-    <!-- <pretestSimple200delete /> -->
-    <!-- <pretestSimple1000delete /> -->
-    <!-- <pretestSimple5000delete /> -->
+    <!-- <feedbackSimulation /> -->
+    <!-- 寻找阈值实验：场景：尾部追加一个节点（无节点移动，纯测算法本身开销） -->
+    <!-- 规模取 10, 50, 100, 200, 500, 1000, 5000，记录三种策略在每种场景下分别执行20次的平均耗时 -->
+    <!-- 规模n1与n2 -->
+    <!-- <thtestSimpleN10 /> -->
+    <!-- <thtestSimpleN50 /> -->
+    <!-- <thtestSimpleN100 /> -->
+    <thtestSimpleN200 />
+    <!-- <thtestSimpleN500 /> -->
+    <!-- <thtestSimpleN1000 /> -->
+    <!-- <thtestSimpleN5000 /> -->
+    <!-- <thtestDoubleEndN10 /> -->
+    <!-- <thtestDoubleEndN50 /> -->
+    <!-- <thtestDoubleEndN100 /> -->
+    <!-- <thtestDoubleEndN200 /> -->
+    <!-- <thtestDoubleEndN500 /> -->
+    <!-- <thtestDoubleEndN1000 /> -->
+    <!-- <thtestDoubleEndN5000 /> -->
+    <!-- <thtestFastN10 /> -->
+    <!-- <thtestFastN50 /> -->
+    <!-- <thtestFastN100 /> -->
+    <!-- <thtestFastN200 /> -->
+    <!-- <thtestFastN500 /> -->
+    <!-- <thtestFastN1000 /> -->
+    <!-- <thtestFastN5000 /> -->
+
+    <!-- 移动比例阈值mth -->
+    <!-- n=200 是测试这剩余三个特征敏感性的理想规模。通过控制随机重排的比例（0%, 10%, …, 100%）产生不同移动比例，记录三种策略在每种场景下分别执行20次的平均耗时 -->
   </div>
 </template>
 <script setup>
-
-import feedbackSimulation from './pages/feedbackSimulation.vue'
-// import pretestFast50append from './components/pretest/fast/50append.vue'
-// import pretestFast200append from './components/pretest/fast/200append.vue'
-// import pretestFast1000append from './components/pretest/fast/1000append.vue'
-// import pretestFast5000append from './components/pretest/fast/5000append.vue'
-// import pretestFast50insert from './components/pretest/fast/50insert.vue'
-// import pretestFast200insert from './components/pretest/fast/200insert.vue'
-// import pretestFast1000insert from './components/pretest/fast/1000insert.vue'
-// import pretestFast5000insert from './components/pretest/fast/5000insert.vue'
-// import pretestFast50towchange from './components/pretest/fast/50towchange.vue'
-// import pretestFast200towchange from './components/pretest/fast/200towchange.vue'
-// import pretestFast1000towchange from './components/pretest/fast/1000towchange.vue'
-// import pretestFast5000towchange from './components/pretest/fast/5000towchange.vue'
-// import pretestFast50delete from './components/pretest/fast/50delete.vue'
-// import pretestFast200delete from './components/pretest/fast/200delete.vue'
-// import pretestFast1000delete from './components/pretest/fast/1000delete.vue'
-// import pretestFast5000delete from './components/pretest/fast/5000delete.vue'
-// import pretestDoubleEnd50append from './components/pretest/doubleEnd/50append.vue'
-// import pretestDoubleEnd200append from './components/pretest/doubleEnd/200append.vue'
-// import pretestDoubleEnd1000append from './components/pretest/doubleEnd/1000append.vue'
-// import pretestDoubleEnd5000append from './components/pretest/doubleEnd/5000append.vue'
-// import pretestDoubleEnd50insert from './components/pretest/doubleEnd/50insert.vue'
-// import pretestDoubleEnd200insert from './components/pretest/doubleEnd/200insert.vue'
-// import pretestDoubleEnd1000insert from './components/pretest/doubleEnd/1000insert.vue'
-// import pretestDoubleEnd5000insert from './components/pretest/doubleEnd/5000insert.vue'
-// import pretestDoubleEnd50towchange from './components/pretest/doubleEnd/50towchange.vue'
-// import pretestDoubleEnd200towchange from './components/pretest/doubleEnd/200towchange.vue'
-// import pretestDoubleEnd1000towchange from './components/pretest/doubleEnd/1000towchange.vue'
-// import pretestDoubleEnd5000towchange from './components/pretest/doubleEnd/5000towchange.vue'
-// import pretestDoubleEnd50delete from './components/pretest/doubleEnd/50delete.vue'
-// import pretestDoubleEnd200delete from './components/pretest/doubleEnd/200delete.vue'
-// import pretestDoubleEnd1000delete from './components/pretest/doubleEnd/1000delete.vue'
-// import pretestDoubleEnd5000delete from './components/pretest/doubleEnd/5000delete.vue'
-// import pretestSimple50append from './components/pretest/simple/50append.vue'
-// import pretestSimple200append from './components/pretest/simple/200append.vue'
-// import pretestSimple1000append from './components/pretest/simple/1000append.vue'
-// import pretestSimple5000append from './components/pretest/simple/5000append.vue'
-// import pretestSimple50insert from './components/pretest/simple/50insert.vue'
-// import pretestSimple200insert from './components/pretest/simple/200insert.vue'
-// import pretestSimple1000insert from './components/pretest/simple/1000insert.vue'
-// import pretestSimple5000insert from './components/pretest/simple/5000insert.vue'
-// import pretestSimple50towchange from './components/pretest/simple/50towchange.vue'
-// import pretestSimple200towchange from './components/pretest/simple/200towchange.vue'
-// import pretestSimple1000towchange from './components/pretest/simple/1000towchange.vue'
-// import pretestSimple5000towchange from './components/pretest/simple/5000towchange.vue'
-// import pretestSimple50delete from './components/pretest/simple/50delete.vue'
-// import pretestSimple200delete from './components/pretest/simple/200delete.vue'
-// import pretestSimple1000delete from './components/pretest/simple/1000delete.vue'
-// import pretestSimple5000delete from './components/pretest/fast/5000delete.vue'
+// import feedbackSimulation from './pages/feedbackSimulation.vue'
+import thtestSimpleN10 from './components/thtest/simple/n10.vue'
+import thtestSimpleN50 from './components/thtest/simple/n50.vue'
+import thtestSimpleN100 from './components/thtest/simple/n100.vue'
+import thtestSimpleN200 from './components/thtest/simple/n200.vue'
+import thtestSimpleN500 from './components/thtest/simple/n500.vue'
+import thtestSimpleN1000 from './components/thtest/simple/n1000.vue'
+import thtestSimpleN5000 from './components/thtest/simple/n5000.vue'
+import thtestDoubleEndN10 from './components/thtest/doubleEnd/n10.vue'
+import thtestDoubleEndN50 from './components/thtest/doubleEnd/n50.vue'
+import thtestDoubleEndN100 from './components/thtest/doubleEnd/n100.vue'
+import thtestDoubleEndN200 from './components/thtest/doubleEnd/n200.vue'
+import thtestDoubleEndN500 from './components/thtest/doubleEnd/n500.vue'
+import thtestDoubleEndN1000 from './components/thtest/doubleEnd/n1000.vue'
+import thtestDoubleEndN5000 from './components/thtest/doubleEnd/n5000.vue'
+import thtestFastN10 from './components/thtest/fast/n10.vue'
+import thtestFastN50 from './components/thtest/fast/n50.vue'
+import thtestFastN100 from './components/thtest/fast/n100.vue'
+import thtestFastN200 from './components/thtest/fast/n200.vue'
+import thtestFastN500 from './components/thtest/fast/n500.vue'
+import thtestFastN1000 from './components/thtest/fast/n1000.vue'
+import thtestFastN5000 from './components/thtest/fast/n5000.vue'
 
 </script>
 
