@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <generateTestSet />
+    <feedbackSimulation />
     <!-- <pretestFast50append /> -->
     <!-- <pretestFast200append /> -->
     <!-- <pretestFast1000append /> -->
@@ -53,7 +53,7 @@
 </template>
 <script setup>
 
-import generateTestSet from './pages/generateTestSet.vue'
+import feedbackSimulation from './pages/feedbackSimulation.vue'
 // import pretestFast50append from './components/pretest/fast/50append.vue'
 // import pretestFast200append from './components/pretest/fast/200append.vue'
 // import pretestFast1000append from './components/pretest/fast/1000append.vue'
