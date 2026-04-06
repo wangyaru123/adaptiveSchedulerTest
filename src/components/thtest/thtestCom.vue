@@ -4,19 +4,65 @@ import { ref, nextTick, onMounted } from "vue";
 // 定义组件的可配置参数
 const props = defineProps({
 	diff: { type: String, default: "快速Diff" },
-	// 数据规模（初始列表长度）
 	itemCount: { type: Number, required: true },
-	// 操作类型：'push'（尾部插入）或 'unshift'（头部插入）
-	operation: { type: String, default: "push" },
-	// 测试总次数（默认 1000）
+	operation: { type: String, default: "push" }, // 支持 'push', 'unshift', 'towchange', 'delete', 'randomMove'
 	maxTests: { type: Number, default: 20 },
-
+	moveRatio: { type: Number, default: 0.3 }, // 仅对 randomMove 有效，移动比例 0~1
 });
 
-// 根据规模和操作类型生成独立的存储键，避免不同测试互相干扰
-const initKey = `initArrData_${props.itemCount}_${props.operation}`;
-const testKey = `auto_test_data_${props.itemCount}_${props.operation}`;
+// ---------- 固定种子的随机函数（用于生成可重复的随机列表）----------
+function mulberry32(seed) {
+	return function () {
+		let t = (seed += 0x6d2b79f5);
+		t = Math.imul(t ^ (t >>> 15), t | 1);
+		t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+		return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+	};
+}
+const rng = mulberry32(42); // 固定种子
 
+function shuffleArray(arr) {
+	const result = [...arr];
+	for (let i = result.length - 1; i > 0; i--) {
+		const j = Math.floor(rng() * (i + 1));
+		[result[i], result[j]] = [result[j], result[i]];
+	}
+	return result;
+}
+
+function generateNewListByMoveRatio(oldList, m) {
+	const n = oldList.length;
+	const k = Math.floor(n * m);
+	if (k === 0) return [...oldList];
+	if (k === n) return shuffleArray(oldList);
+
+	// 生成索引数组并随机打乱
+	const indices = Array.from({ length: n }, (_, i) => i);
+	for (let i = 0; i < n; i++) {
+		const randIdx = i + Math.floor(rng() * (n - i));
+		[indices[i], indices[randIdx]] = [indices[randIdx], indices[i]];
+	}
+	const moveIndices = indices.slice(0, k);
+	const stayIndices = indices.slice(k);
+
+	const newList = [];
+	stayIndices.sort((a, b) => a - b);
+	for (const idx of stayIndices) {
+		newList.push(oldList[idx]);
+	}
+	const toMove = moveIndices.map((idx) => oldList[idx]);
+	const shuffledToMove = shuffleArray(toMove);
+	newList.push(...shuffledToMove);
+	return newList;
+}
+
+// 根据规模和操作类型生成独立的存储键，避免不同测试互相干扰
+let initKey = `initArrData_${props.itemCount}_${props.operation}`;
+let testKey = `auto_test_data_${props.itemCount}_${props.operation}`;
+if (props.operation === "randomMove") {
+	initKey += `_${props.moveRatio}`;
+	testKey += `_${props.moveRatio}`;
+}
 const items = ref([]);
 const buttonRef = ref(null);
 let updateStartTime = 0;
@@ -39,32 +85,20 @@ const initArr = () => {
 // 执行测试操作（一次点击）
 const changeData = () => {
 	updateStartTime = performance.now();
-	if (props.operation === "push") {
-		console.log(
-			`${props.diff}-规模${props.itemCount}-尾部插入-[第${
-				getCurrentCount() + 1
-			}次]实验`
-		);
-	} else if (props.operation === "unshift") {
-		console.log(
-			`${props.diff}-规模${props.itemCount}-头部插入-[第${
-				getCurrentCount() + 1
-			}次]实验`
-		);
-	} else if (props.operation === "towchange") {
-		console.log(
-			`${props.diff}-规模${props.itemCount}-首尾交换-[第${
-				getCurrentCount() + 1
-			}次]实验`
-		);
-	} else if (props.operation === "delete") {
-		console.log(
-			`${props.diff}-规模${props.itemCount}-尾部删除-[第${
-				getCurrentCount() + 1
-			}次]实验`
-		);
-	}
+	// 构造操作名称字符串用于日志
+	let opName = "";
+	if (props.operation === "push") opName = "尾部插入";
+	else if (props.operation === "unshift") opName = "头部插入";
+	else if (props.operation === "towchange") opName = "首尾交换";
+	else if (props.operation === "delete") opName = "尾部删除";
+	else if (props.operation === "randomMove")
+		opName = `随机重排(${props.moveRatio})`;
 
+	console.log(
+		`${props.diff}-规模${props.itemCount}-${opName}-[${
+			getCurrentCount() + 1
+		}次]实验`
+	);
 	console.log(`更新开始时间`, updateStartTime);
 
 	// 根据 operation 参数执行不同的数组修改
@@ -78,7 +112,13 @@ const changeData = () => {
 			items.value[0],
 		];
 	} else if (props.operation === "delete") {
-		items.value.pop(); // 删除最后一个元素，并返回被删除的元素
+		items.value.pop();
+	} else if (props.operation === "randomMove") {
+		const newList = generateNewListByMoveRatio(
+			items.value,
+			props.moveRatio
+		);
+		items.value = newList;
 	}
 
 	nextTick(() => {

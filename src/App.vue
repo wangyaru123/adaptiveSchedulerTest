@@ -7,7 +7,7 @@
     <!-- <thtestSimpleN10 /> -->
     <!-- <thtestSimpleN50 /> -->
     <!-- <thtestSimpleN100 /> -->
-    <thtestSimpleN200 />
+    <!-- <thtestSimpleN200 /> -->
     <!-- <thtestSimpleN500 /> -->
     <!-- <thtestSimpleN1000 /> -->
     <!-- <thtestSimpleN5000 /> -->
@@ -28,6 +28,28 @@
 
     <!-- 移动比例阈值mth -->
     <!-- n=200 是测试这剩余三个特征敏感性的理想规模。通过控制随机重排的比例（0%, 10%, …, 100%）产生不同移动比例，记录三种策略在每种场景下分别执行20次的平均耗时 -->
+    <!-- <thtestDoubleEndM00 /> -->
+    <!-- <thtestDoubleEndM01 /> -->
+    <!-- <thtestDoubleEndM02 /> -->
+    <!-- <thtestDoubleEndM03 /> -->
+    <!-- <thtestDoubleEndM04 /> -->
+    <!-- <thtestDoubleEndM05 /> -->
+    <!-- <thtestDoubleEndM06 /> -->
+    <!-- <thtestDoubleEndM07 /> -->
+    <!-- <thtestDoubleEndM08 /> -->
+    <!-- <thtestDoubleEndM09 /> -->
+    <!-- <thtestDoubleEndM10 /> -->
+    <!-- <thtestFastM00 /> -->
+    <!-- <thtestFastM01 /> -->
+    <!-- <thtestFastM02 /> -->
+    <!-- <thtestFastM03 /> -->
+    <!-- <thtestFastM04 /> -->
+    <!-- <thtestFastM05 /> -->
+    <!-- <thtestFastM06 /> -->
+    <!-- <thtestFastM07 /> -->
+    <!-- <thtestFastM08 /> -->
+    <!-- <thtestFastM09 /> -->
+    <thtestFastM10 />
   </div>
 </template>
 <script setup>
@@ -53,7 +75,28 @@ import thtestFastN200 from './components/thtest/fast/n200.vue'
 import thtestFastN500 from './components/thtest/fast/n500.vue'
 import thtestFastN1000 from './components/thtest/fast/n1000.vue'
 import thtestFastN5000 from './components/thtest/fast/n5000.vue'
-
+import thtestDoubleEndM00 from './components/thtest/doubleEnd/m0.vue'
+import thtestDoubleEndM01 from './components/thtest/doubleEnd/m1.vue'
+import thtestDoubleEndM02 from './components/thtest/doubleEnd/m2.vue'
+import thtestDoubleEndM03 from './components/thtest/doubleEnd/m3.vue'
+import thtestDoubleEndM04 from './components/thtest/doubleEnd/m4.vue'
+import thtestDoubleEndM05 from './components/thtest/doubleEnd/m5.vue'
+import thtestDoubleEndM06 from './components/thtest/doubleEnd/m6.vue'
+import thtestDoubleEndM07 from './components/thtest/doubleEnd/m7.vue'
+import thtestDoubleEndM08 from './components/thtest/doubleEnd/m8.vue'
+import thtestDoubleEndM09 from './components/thtest/doubleEnd/m9.vue'
+import thtestDoubleEndM10 from './components/thtest/doubleEnd/m10.vue'
+import thtestFastM00 from './components/thtest/fast/m0.vue'
+import thtestFastM01 from './components/thtest/fast/m1.vue'
+import thtestFastM02 from './components/thtest/fast/m2.vue'
+import thtestFastM03 from './components/thtest/fast/m3.vue'
+import thtestFastM04 from './components/thtest/fast/m4.vue'
+import thtestFastM05 from './components/thtest/fast/m5.vue'
+import thtestFastM06 from './components/thtest/fast/m6.vue'
+import thtestFastM07 from './components/thtest/fast/m7.vue'
+import thtestFastM08 from './components/thtest/fast/m8.vue'
+import thtestFastM09 from './components/thtest/fast/m9.vue'
+import thtestFastM10 from './components/thtest/fast/m10.vue'
 </script>
 
 <style scoped>
