@@ -1,14 +1,17 @@
 <script setup>
-import { ref, nextTick, onMounted } from "vue";
+import { ref, nextTick, onMounted, getCurrentInstance } from "vue";
 
 // 定义组件的可配置参数
 const props = defineProps({
 	diff: { type: String, default: "快速Diff" },
 	itemCount: { type: Number, required: true },
-	operation: { type: String, default: "push" }, // 支持 'push', 'unshift', 'towchange', 'delete', 'randomMove'
+	operation: { type: String, default: "push" }, // 支持 'push', 'unshift', 'towchange', 'delete', 'randomMove', 'testComplexity'
 	maxTests: { type: Number, default: 20 },
 	moveRatio: { type: Number, default: 0.3 }, // 仅对 randomMove 有效，移动比例 0~1
+	heavyRatio: { type: Number, default: 0.3 }, // 仅对 testComplexity 有效，移动比例 0~1
 });
+
+const instance = getCurrentInstance();
 
 // ---------- 固定种子的随机函数（用于生成可重复的随机列表）----------
 function mulberry32(seed) {
@@ -36,7 +39,6 @@ function generateNewListByMoveRatio(oldList, m) {
 	if (k === 0) return [...oldList];
 	if (k === n) return shuffleArray(oldList);
 
-	// 生成索引数组并随机打乱
 	const indices = Array.from({ length: n }, (_, i) => i);
 	for (let i = 0; i < n; i++) {
 		const randIdx = i + Math.floor(rng() * (n - i));
@@ -53,6 +55,8 @@ function generateNewListByMoveRatio(oldList, m) {
 	const toMove = moveIndices.map((idx) => oldList[idx]);
 	const shuffledToMove = shuffleArray(toMove);
 	newList.push(...shuffledToMove);
+	console.log("newList----", newList);
+
 	return newList;
 }
 
@@ -62,6 +66,10 @@ let testKey = `auto_test_data_${props.itemCount}_${props.operation}`;
 if (props.operation === "randomMove") {
 	initKey += `_${props.moveRatio}`;
 	testKey += `_${props.moveRatio}`;
+}
+if (props.operation === "testComplexity") {
+	initKey += `_${props.heavyRatio}`;
+	testKey += `_${props.heavyRatio}`;
 }
 const items = ref([]);
 const buttonRef = ref(null);
@@ -81,11 +89,37 @@ const initArr = () => {
 		items.value = arr;
 	}
 };
-
+// 生成具有指定重型节点比例的列表（n = 200，重型节点含子元素）
+function generateComplexityList() {
+	const stored = sessionStorage.getItem(initKey);
+	const heavyCount = Math.floor(props.itemCount * props.heavyRatio);
+	if (stored) {
+		items.value = JSON.parse(stored);
+	} else {
+		const arr = [];
+		for (let i = 1; i <= props.itemCount; i++) {
+			const id = `n${i + 1}`;
+			const isHeavy = i < heavyCount;
+			arr.push({
+				id,
+				name: isHeavy ? `Heavy ${id}` : `Light ${id}`,
+				isHeavy,
+				children: isHeavy
+					? Array(5)
+							.fill(0)
+							.map((_, idx) => ({ text: `sub ${idx}` }))
+					: [],
+			});
+		}
+		sessionStorage.setItem(initKey, JSON.stringify(arr));
+		// 打乱顺序，使重型节点均匀分布
+		items.value = shuffleArray(arr);
+		console.log("items.value", items.value);
+	}
+}
 // 执行测试操作（一次点击）
 const changeData = () => {
 	updateStartTime = performance.now();
-	// 构造操作名称字符串用于日志
 	let opName = "";
 	if (props.operation === "push") opName = "尾部插入";
 	else if (props.operation === "unshift") opName = "头部插入";
@@ -93,6 +127,8 @@ const changeData = () => {
 	else if (props.operation === "delete") opName = "尾部删除";
 	else if (props.operation === "randomMove")
 		opName = `随机重排(${props.moveRatio})`;
+	else if (props.operation === "testComplexity")
+		opName = `测试复杂度(${props.heavyRatio})`;
 
 	console.log(
 		`${props.diff}-规模${props.itemCount}-${opName}-[${
@@ -113,7 +149,10 @@ const changeData = () => {
 		];
 	} else if (props.operation === "delete") {
 		items.value.pop();
-	} else if (props.operation === "randomMove") {
+	} else if (
+		props.operation === "randomMove" ||
+		props.operation === "testComplexity"
+	) {
 		const newList = generateNewListByMoveRatio(
 			items.value,
 			props.moveRatio
@@ -135,12 +174,16 @@ const changeData = () => {
 			data.count += 1;
 			if (data.count < props.maxTests) {
 				saveData(data);
-				initArr(); // 重置数组到初始状态，保证每次起始数据一致
+				if (props.operation === "testComplexity") {
+					generateComplexityList();
+				} else {
+					initArr(); // 重置数组到初始状态，保证每次起始数据一致
+				}
+
 				if (buttonRef.value) {
-					buttonRef.value.click(); // 自动触发下一次点击
+					buttonRef.value.click();
 				}
 			} else {
-				// 测试完成，输出汇总
 				console.log("测试完成，所有耗时：", data.durations);
 				const avg =
 					data.durations.reduce((a, b) => a + b, 0) / props.maxTests;
@@ -179,26 +222,38 @@ const resetTest = () => {
 };
 
 onMounted(() => {
-	// 每次挂载时重新生成初始数据（保证起始状态一致）
 	sessionStorage.removeItem(initKey);
-	initArr();
+	if (props.operation === "testComplexity") {
+		generateComplexityList();
+	} else {
+		initArr();
+	}
 });
 </script>
 
 <template>
-  <div data-monitor-list>
-    <div v-for="(item, index) in items" :key="index">
-      {{ item.name }}
+  <div>
+    <!-- 原有测试区域 -->
+    <div data-monitor-list>
+      <div v-for="(item, index) in items" :key="index">
+        <span>{{ item.name }}</span>
+        <!-- 渲染重型节点的子元素（实验用） -->
+        <div v-if="item.isHeavy" style="margin-left: 20px;">
+          <div v-for="(child, idx) in item.children" :key="idx">{{ child.text }}</div>
+        </div>
+      </div>
     </div>
+
+    <button ref="buttonRef" type="button" @click="changeData">
+      change
+    </button>
+
+    <button type="button" @click="resetTest" style="margin-left: 10px;">
+      重置测试
+    </button>
+
+
   </div>
-
-  <button ref="buttonRef" type="button" @click="changeData">
-    change
-  </button>
-
-  <button type="button" @click="resetTest" style="margin-left: 10px;">
-    重置测试
-  </button>
 </template>
 
 <style scoped>

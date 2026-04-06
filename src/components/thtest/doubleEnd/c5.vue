@@ -1,0 +1,7 @@
+<template>
+  <thtestCom :item-count="200" :heavyRatio="0.5" operation="testComplexity" :moveRatio="0.4" diff="双端Diff" />
+</template>
+
+<script setup>
+import thtestCom from '../thtestCom.vue'
+</script>
