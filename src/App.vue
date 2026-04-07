@@ -54,28 +54,8 @@
     
     <!-- 节点复杂度cth -->
     <!-- n=200 是测试这剩余三个特征敏感性的理想规模。通过控制随机重排的比例（0%, 10%, …, 100%）产生不同移动比例，记录三种策略在每种场景下分别执行20次的平均耗时 -->
-    <!-- <thtestDoubleEndC00 /> -->
-    <!-- <thtestDoubleEndC01 /> -->
-    <!-- <thtestDoubleEndC02 /> -->
-    <!-- <thtestDoubleEndC03 /> -->
-    <!-- <thtestDoubleEndC04 /> -->
-    <!-- <thtestDoubleEndC05 /> -->
-    <!-- <thtestDoubleEndC06 /> -->
-    <!-- <thtestDoubleEndC07 /> -->
-    <!-- <thtestDoubleEndC08 /> -->
-    <!-- <thtestDoubleEndC09 /> -->
-    <!-- <thtestDoubleEndC10 /> -->
-    <!-- <thtestFastC00 /> -->
-    <!-- <thtestFastC01 /> -->
-    <!-- <thtestFastC02 /> -->
-    <thtestFastC03 />
-    <!-- <thtestFastC04 /> -->
-    <!-- <thtestFastC05 /> -->
-    <!-- <thtestFastC06 /> -->
-    <!-- <thtestFastC07 /> -->
-    <!-- <thtestFastC08 /> -->
-    <!-- <thtestFastC09 /> -->
-    <!-- <thtestFastC10 /> -->
+    <thtestCCom />
+
   </div>
 </template>
 <script setup>
@@ -124,28 +104,8 @@ import thtestFastM08 from './components/thtest/fast/m8.vue'
 import thtestFastM09 from './components/thtest/fast/m9.vue'
 import thtestFastM10 from './components/thtest/fast/m10.vue'
 
-import thtestDoubleEndC00 from './components/thtest/doubleEnd/c0.vue'
-import thtestDoubleEndC01 from './components/thtest/doubleEnd/c1.vue'
-import thtestDoubleEndC02 from './components/thtest/doubleEnd/c2.vue'
-import thtestDoubleEndC03 from './components/thtest/doubleEnd/c3.vue'
-import thtestDoubleEndC04 from './components/thtest/doubleEnd/c4.vue'
-import thtestDoubleEndC05 from './components/thtest/doubleEnd/c5.vue'
-import thtestDoubleEndC06 from './components/thtest/doubleEnd/c6.vue'
-import thtestDoubleEndC07 from './components/thtest/doubleEnd/c7.vue'
-import thtestDoubleEndC08 from './components/thtest/doubleEnd/c8.vue'
-import thtestDoubleEndC09 from './components/thtest/doubleEnd/c9.vue'
-import thtestDoubleEndC10 from './components/thtest/doubleEnd/c10.vue'
-import thtestFastC00 from './components/thtest/fast/c0.vue'
-import thtestFastC01 from './components/thtest/fast/c1.vue'
-import thtestFastC02 from './components/thtest/fast/c2.vue'
-import thtestFastC03 from './components/thtest/fast/c3.vue'
-import thtestFastC04 from './components/thtest/fast/c4.vue'
-import thtestFastC05 from './components/thtest/fast/c5.vue'
-import thtestFastC06 from './components/thtest/fast/c6.vue'
-import thtestFastC07 from './components/thtest/fast/c7.vue'
-import thtestFastC08 from './components/thtest/fast/c8.vue'
-import thtestFastC09 from './components/thtest/fast/c9.vue'
-import thtestFastC10 from './components/thtest/fast/c10.vue'
+import thtestCCom from './components/thtest/thtestCCom.vue'
+
 </script>
 
 <style scoped>
