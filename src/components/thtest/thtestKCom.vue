@@ -1,24 +1,21 @@
 <script setup>
 import { ref, getCurrentInstance, onMounted, nextTick } from "vue";
-// 列表数据（用于模板渲染，必须存在）
-const items = ref([]);
+
+const instance = getCurrentInstance();
+const results = ref([]);
 const buttonRef = ref(null);
 
 onMounted(() => {
-	items.value = generateComplexityList();
+	items.value = generateInitialList();
 	if (buttonRef.value) buttonRef.value.click();
 });
 
-const instance = getCurrentInstance();
+// 实验固定参数
+const N = 200; // 列表规模
+const MOVE_RATIO = 0.4; // 移动比例
+const REPEATS = 20; // 每种 key 类型重复次数
 
-// 实验参数
-const cListInput = ref("0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9");
-const repeats = ref(20);
-const itemCount = ref(200);
-const moveRatio = ref(0.4);
-const results = ref([]);
-
-// ---------- 固定种子的随机函数（保证可重复）----------
+// ---------- 固定种子的随机函数 ----------
 function mulberry32(seed) {
 	return function () {
 		let t = (seed += 0x6d2b79f5);
@@ -63,25 +60,27 @@ function generateNewListByMoveRatio(oldList, m) {
 	return newList;
 }
 
-// 生成具有指定重型节点比例的列表（重型节点含子元素）
-function generateComplexityList(heavyRatio, n) {
+// 生成初始列表（根据 key 类型生成不同的 key 字段）
+function generateInitialList(keyType) {
 	const list = [];
-	const heavyCount = Math.floor(n * heavyRatio);
-	for (let i = 0; i < n; i++) {
+	for (let i = 0; i < N; i++) {
 		const id = `n${i + 1}`;
-		const isHeavy = i < heavyCount;
+		let keyValue;
+		if (keyType === "stable") {
+			keyValue = id; // 稳定 ID
+		} else if (keyType === "index") {
+			keyValue = i; // 数组索引（随位置变化，不稳定）
+		} else {
+			// 'none'
+			keyValue = undefined; // 无 key
+		}
 		list.push({
 			id,
-			name: isHeavy ? `Heavy ${id}` : `Light ${id}`,
-			isHeavy,
-			children: isHeavy
-				? Array(5)
-						.fill(0)
-						.map((_, idx) => ({ text: `sub ${idx}` }))
-				: [],
+			name: `Item ${id}`,
+			keyValue,
 		});
 	}
-	// 打乱顺序，使重型节点均匀分布
+	// 打乱顺序，避免初始顺序影响
 	return shuffleArray(list);
 }
 
@@ -96,71 +95,75 @@ function setStrategy(strategy) {
 async function changeData() {
 	results.value = [];
 
-	const cValues = cListInput.value
-		.split(",")
-		.map((s) => parseFloat(s.trim()))
-		.filter((v) => !isNaN(v));
-	const n = itemCount.value;
-	const m = moveRatio.value;
-	const rep = repeats.value;
+	const keyTypes = [
+		{ name: "稳定 ID (业务唯一标识)", k: 1.0, type: "stable" },
+		{ name: "数组索引", k: 0.65, type: "index" },
+		{ name: "无 key", k: 0.0, type: "none" },
+	];
 
-	for (const c of cValues) {
-		console.log(`测试重型节点比例: ${c * 100}%`);
-		// 生成初始列表（带复杂度）
-		const oldList = generateComplexityList(c, n);
-		// 生成新列表（基于旧列表，固定移动比例 m）
-		const newList = generateNewListByMoveRatio(oldList, m);
+	for (const keyCfg of keyTypes) {
+		console.log(`测试 key 类型: ${keyCfg.name} (k=${keyCfg.k})`);
+		// 生成初始列表
+		const oldList = generateInitialList(keyCfg.type);
+		// 生成新列表（基于旧列表，移动比例固定）
+		const newList = generateNewListByMoveRatio(oldList, MOVE_RATIO);
 
 		let sumDoubleEnd = 0,
 			sumFast = 0;
 
 		// 测试双端 Diff
-		for (let i = 0; i < rep; i++) {
-			// 重置列表
-			items.value = [...oldList];
+		for (let i = 0; i < REPEATS; i++) {
+			// 重置列表为旧列表（深拷贝）
+			items.value = JSON.parse(JSON.stringify(oldList));
 			await nextTick();
 			const start = performance.now();
 			setStrategy("doubleEnd");
-			items.value = [...newList];
+			items.value = JSON.parse(JSON.stringify(newList));
 			await nextTick();
 			const end = performance.now();
 			sumDoubleEnd += end - start;
 		}
 
 		// 测试快速 Diff
-		for (let i = 0; i < rep; i++) {
-			items.value = [...oldList];
+		for (let i = 0; i < REPEATS; i++) {
+			items.value = JSON.parse(JSON.stringify(oldList));
 			await nextTick();
 			const start = performance.now();
 			setStrategy("fast");
-			items.value = [...newList];
+			items.value = JSON.parse(JSON.stringify(newList));
 			await nextTick();
 			const end = performance.now();
 			sumFast += end - start;
 		}
 
-		const avgDoubleEnd = Number((sumDoubleEnd / rep).toFixed(2));
-		const avgFast = Number((sumFast / rep).toFixed(2));
+		const avgDoubleEnd = Number((sumDoubleEnd / REPEATS).toFixed(2));
+		const avgFast = Number((sumFast / REPEATS).toFixed(2));
 		const diff = Number((avgDoubleEnd - avgFast).toFixed(2));
-		results.value.push({ c, avgDoubleEnd, avgFast, diff });
+
+		results.value.push({
+			type: keyCfg.name,
+			k: keyCfg.k,
+			avgDoubleEnd,
+			avgFast,
+			diff,
+		});
 		console.log(
-			`c=${c}: double=${avgDoubleEnd}ms, fast=${avgFast}ms, diff=${diff}ms`
+			`${keyCfg.name}: double=${avgDoubleEnd}ms, fast=${avgFast}ms, diff=${diff}ms`
 		);
 	}
-
 	console.table(`实验结果`);
 	console.table(results.value);
 }
+
+// 列表数据（用于模板渲染）
+const items = ref([]);
 </script>
 
 <template>
   <div>
     <div data-monitor-list>
-      <div v-for="(item, index) in items" :key="index">
-        <span>{{ item.name }}</span>
-        <div v-if="item.isHeavy" style="margin-left: 20px;">
-          <div v-for="(child, idx) in item.children" :key="idx">{{ child.text }}</div>
-        </div>
+      <div v-for="item in items" :key="item.keyValue">
+        {{ item.name }}
       </div>
     </div>
     <button ref="buttonRef" type="button" @click="changeData">change</button>

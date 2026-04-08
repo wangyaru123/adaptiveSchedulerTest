@@ -54,7 +54,9 @@
     
     <!-- 节点复杂度cth -->
     <!-- n=200 是测试这剩余三个特征敏感性的理想规模。通过控制随机重排的比例（0%, 10%, …, 100%）产生不同移动比例，记录三种策略在每种场景下分别执行20次的平均耗时 -->
-    <thtestCCom />
+    <!-- <thtestCCom /> -->
+    <!-- key稳定性阈值kth -->
+    <thtestKCom />
 
   </div>
 </template>
@@ -105,6 +107,7 @@ import thtestFastM09 from './components/thtest/fast/m9.vue'
 import thtestFastM10 from './components/thtest/fast/m10.vue'
 
 import thtestCCom from './components/thtest/thtestCCom.vue'
+import thtestKCom from './components/thtest/thtestKCom.vue'
 
 </script>
 
