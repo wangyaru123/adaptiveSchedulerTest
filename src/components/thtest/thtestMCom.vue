@@ -1,19 +1,30 @@
+<template>
+
+    <div data-monitor-list>
+      <div v-for="(item, index) in items" :key="index">
+        {{ item.name }}
+      </div>
+    </div>
+    <button ref="buttonRef" type="button" @click="changeData">开始实验</button>
+    <button type="button" @click="resetTest" style="margin-left: 10px;">重置测试</button>
+ 
+</template>
+
 <script setup>
 import { ref, getCurrentInstance, onMounted, nextTick } from "vue";
 
 const instance = getCurrentInstance();
-const results = ref([]);
+const items = ref([]);
 const buttonRef = ref(null);
-
-onMounted(() => {
-	items.value = generateInitialList();
-	if (buttonRef.value) buttonRef.value.click();
-});
+const results = ref([]);
 
 // 实验固定参数
 const N = 200; // 列表规模
-const MOVE_RATIO = 0.4; // 移动比例
-const REPEATS = 20; // 每种 key 类型重复次数
+const C = 0; // 节点复杂度（轻量）
+const K = 1.0; // key 稳定性（稳定 ID）
+const ROUNDS = 10; // 回合数
+const PER_ROUND = 20; // 每回合测量次数
+const moveRatios = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
 
 // ---------- 固定种子的随机函数 ----------
 function mulberry32(seed) {
@@ -60,27 +71,15 @@ function generateNewListByMoveRatio(oldList, m) {
 	return newList;
 }
 
-// 生成初始列表（根据 key 类型生成不同的 key 字段）
-function generateInitialList(keyType) {
+// 生成初始列表（轻量节点，稳定 ID）
+function generateInitialList() {
 	const list = [];
 	for (let i = 0; i < N; i++) {
-		const id = `n${i + 1}`;
-		let keyValue;
-		if (keyType === "stable") {
-			keyValue = id; // 稳定 ID
-		} else if (keyType === "index") {
-			keyValue = i; // 数组索引（随位置变化，不稳定）
-		} else {
-			// 'none'
-			keyValue = undefined; // 无 key
-		}
 		list.push({
-			id,
-			name: `Item ${id}`,
-			keyValue,
+			id: `n${i + 1}`,
+			name: `Item ${i + 1}`,
 		});
 	}
-	// 打乱顺序，避免初始顺序影响
 	return shuffleArray(list);
 }
 
@@ -91,82 +90,89 @@ function setStrategy(strategy) {
 	}
 }
 
+// 延迟函数
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * 对指定的策略执行多回合测试，返回平均耗时
+ * @param {string} strategy 'doubleEnd' 或 'fast'
+ * @param {Array} oldList 旧列表
+ * @param {Array} newList 新列表
+ * @returns {Promise<number>} 平均耗时（ms）
+ */
+async function runStrategyWithRounds(strategy, oldList, newList) {
+	let totalTime = 0;
+	let totalMeasurements = 0;
+	for (let round = 0; round < ROUNDS; round++) {
+		let roundTime = 0;
+		for (let i = 0; i < PER_ROUND; i++) {
+			items.value = JSON.parse(JSON.stringify(oldList));
+			await nextTick();
+			const start = performance.now();
+			setStrategy(strategy);
+			items.value = JSON.parse(JSON.stringify(newList));
+			await nextTick();
+			const end = performance.now();
+			roundTime += end - start;
+		}
+		totalTime += roundTime;
+		totalMeasurements += PER_ROUND;
+		if (round < ROUNDS - 1) await sleep(1000);
+	}
+	return totalTime / totalMeasurements;
+}
+
 // 运行实验
 async function changeData() {
 	results.value = [];
 
-	const keyTypes = [
-		{ name: "稳定 ID (业务唯一标识)", k: 1.0, type: "stable" },
-		{ name: "数组索引", k: 0.65, type: "index" },
-		{ name: "无 key", k: 0.0, type: "none" },
-	];
+	const oldList = generateInitialList(); // 固定旧列表（所有 m 共用）
 
-	for (const keyCfg of keyTypes) {
-		console.log(`测试 key 类型: ${keyCfg.name} (k=${keyCfg.k})`);
-		// 生成初始列表
-		const oldList = generateInitialList(keyCfg.type);
-		// 生成新列表（基于旧列表，移动比例固定）
-		const newList = generateNewListByMoveRatio(oldList, MOVE_RATIO);
+	for (const m of moveRatios) {
+		console.log(`测试移动比例: ${m.toFixed(1)}`);
+		// 基于旧列表生成新列表（移动比例 m）
+		const newList = generateNewListByMoveRatio(oldList, m);
 
-		let sumDoubleEnd = 0,
-			sumFast = 0;
-
-		// 测试双端 Diff
-		for (let i = 0; i < REPEATS; i++) {
-			// 重置列表为旧列表（深拷贝）
-			items.value = JSON.parse(JSON.stringify(oldList));
-			await nextTick();
-			const start = performance.now();
-			setStrategy("doubleEnd");
-			items.value = JSON.parse(JSON.stringify(newList));
-			await nextTick();
-			const end = performance.now();
-			sumDoubleEnd += end - start;
-		}
-
-		// 测试快速 Diff
-		for (let i = 0; i < REPEATS; i++) {
-			items.value = JSON.parse(JSON.stringify(oldList));
-			await nextTick();
-			const start = performance.now();
-			setStrategy("fast");
-			items.value = JSON.parse(JSON.stringify(newList));
-			await nextTick();
-			const end = performance.now();
-			sumFast += end - start;
-		}
-
-		const avgDoubleEnd = Number((sumDoubleEnd / REPEATS).toFixed(2));
-		const avgFast = Number((sumFast / REPEATS).toFixed(2));
-		const diff = Number((avgDoubleEnd - avgFast).toFixed(2));
+		const avgDouble = await runStrategyWithRounds(
+			"doubleEnd",
+			oldList,
+			newList
+		);
+		const avgFast = await runStrategyWithRounds("fast", oldList, newList);
+		const diff = avgDouble - avgFast;
 
 		results.value.push({
-			type: keyCfg.name,
-			k: keyCfg.k,
-			avgDoubleEnd,
-			avgFast,
-			diff,
+			m,
+			avgDouble: Number(avgDouble.toFixed(2)),
+			avgFast: Number(avgFast.toFixed(2)),
+			diff: Number(diff.toFixed(2)),
 		});
 		console.log(
-			`${keyCfg.name}: double=${avgDoubleEnd}ms, fast=${avgFast}ms, diff=${diff}ms`
+			`m=${m.toFixed(1)}: double=${avgDouble.toFixed(
+				2
+			)}ms, fast=${avgFast.toFixed(2)}ms, diff=${diff.toFixed(2)}ms`
 		);
 	}
-	console.table(`实验结果`);
+
+	console.table("移动比例实验结果：");
 	console.table(results.value);
 }
 
-// 列表数据（用于模板渲染）
-const items = ref([]);
+// 重置测试
+const resetTest = () => {
+	window.location.reload();
+};
+
+onMounted(() => {
+	// 初始化一个空列表，避免初始渲染报错
+	items.value = generateInitialList();
+	// 自动开始实验
+	if (buttonRef.value) buttonRef.value.click();
+});
 </script>
 
-<template>
-  <div>
-    <div data-monitor-list>
-      <div v-for="item in items" :key="item.keyValue">
-        {{ item.name }}
-      </div>
-    </div>
-    <button ref="buttonRef" type="button" @click="changeData">change</button>
-    <button type="button" @click="resetTest" style="margin-left: 10px;">重置测试</button>
-  </div>
-</template>
+<style scoped>
+.read-the-docs {
+	color: #888;
+}
+</style>
