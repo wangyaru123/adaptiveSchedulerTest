@@ -1,58 +1,51 @@
 // feedbackSimulation.js
 // 用途：在浏览器/Vue环境中离线验证在线反馈调度器的有效性
-// 朴素 Diff
+// 依赖：无 Node.js API，纯 JavaScript，可直接在 Vue 组件中 import 使用
+
+// ------------------------------
+// 1. 性能模型（基于预实验数据拟合，无噪声）
+// ------------------------------
+
+/**
+ * 朴素 Diff 耗时估算
+ * @param {number} n 列表规模
+ * @returns {number} 估算耗时（毫秒）
+ */
 function timeSimple(n) {
-  if (n < 50) return 0.16 + 0.0032 * n;
-  return 1000 + n * 0.5;   // 中大规模惩罚值
+  if (n < 50) return 0.12 + 0.005 * n;   // 小规模线性拟合
+  return 1000 + n * 0.5;                 // 中大规模惩罚值，避免被选中
 }
 
-// 双端 Diff
+/**
+ * 双端 Diff 耗时估算
+ * @param {number} n 列表规模
+ * @param {number} m 移动比例
+ * @param {number} c 节点复杂度
+ * @returns {number} 估算耗时（毫秒）
+ */
 function timeDouble(n, m, c) {
-  const base = 0.12 + 0.0024 * n;
-  const move = 15 * m * n / 1000;
-  const comp = 9 * c * n / 1000;
-  return base + move + comp;
+  const base = 0.32 + 0.006 * n;
+  const movePenalty = 2.0 * m * n / 1000;
+  const complexityPenalty = 0.5 * c * n / 1000;
+  return base + movePenalty + complexityPenalty;
 }
 
-// 快速 Diff 基准耗时插值表（尾部追加实测数据）
-const fastBasePoints = [
-  { n: 10, time: 0.23 },
-  { n: 50, time: 0.27 },
-  { n: 100, time: 0.38 },
-  { n: 200, time: 0.70 },
-  { n: 500, time: 1.18 },
-  { n: 1000, time: 2.45 },
-  { n: 5000, time: 16.25 }
-];
-
-function getFastBase(n) {
-  if (n <= fastBasePoints[0].n) return fastBasePoints[0].time;
-  if (n >= fastBasePoints[fastBasePoints.length-1].n) return fastBasePoints[fastBasePoints.length-1].time;
-  for (let i = 0; i < fastBasePoints.length - 1; i++) {
-    const p1 = fastBasePoints[i];
-    const p2 = fastBasePoints[i+1];
-    if (n >= p1.n && n <= p2.n) {
-      const t = (n - p1.n) / (p2.n - p1.n);
-      return p1.time + t * (p2.time - p1.time);
-    }
-  }
-  return 0;
+/**
+ * 快速 Diff 耗时估算
+ * @param {number} n 列表规模
+ * @param {number} m 移动比例
+ * @param {number} k key稳定性系数
+ * @returns {number} 估算耗时（毫秒）
+ */
+function timeFast(n, m, k) {
+  const base = 0.38 + 0.0058 * n;
+  const lisOverhead = n > 1 ? 0.002 * n * Math.log2(n) : 0;
+  let moveEffect = 0;
+  if (m >= 0.3) moveEffect = -0.8 * m * n / 1000;
+  const keyPenalty = 1.5 * (1 - k) * n / 1000;
+  return base + lisOverhead + moveEffect + keyPenalty;
 }
 
-// 快速 Diff
-function timeFast(n, m, k, c) {
-  const base = getFastBase(n);
-  const move = 9.5 * m * n / 1000;
-  // 节点复杂度项：仅当 c ≤ 0.5 时使用拟合系数，否则极大惩罚
-  let comp;
-  if (c <= 0.5) {
-    comp = 7.7 * c * n / 1000;
-  } else {
-    comp = 1000;  // c > 0.5 时不应选中快速 Diff
-  }
-  const keyPen = 11 * (1 - k) * n / 1000;
-  return base + move + comp + keyPen;
-}
 /**
  * 真实最优策略（无噪声）
  * @param {Object} f 特征向量 { n, m_est, c, k }

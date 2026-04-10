@@ -19,9 +19,9 @@ const buttonRef = ref(null);
 const results = ref([]);
 
 // 实验固定参数
-const ROUNDS = 10;          // 回合数
-const PER_ROUND = 1;       // 每回合测量次数
-const APPEND_COUNT = 5;     // 每次尾部追加的节点数量
+const ROUNDS = 50;          // 回合数
+const PER_ROUND = 20;       // 每回合测量次数
+const APPEND_COUNT = 1;     // 每次尾部追加的节点数量
 const sizes = [10, 50, 100, 200, 500, 1000, 5000];  // 待测列表规模（初始规模）
 
 // ---------- 固定种子的随机函数 ----------

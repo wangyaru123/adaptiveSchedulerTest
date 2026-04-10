@@ -15,7 +15,7 @@ onMounted(() => {
 // 实验固定参数
 const N = 200;          // 列表规模
 const MOVE_RATIO = 0.4; // 移动比例
-const ROUNDS = 10;      // 回合数
+const ROUNDS = 50;      // 回合数
 const PER_ROUND = 20;   // 每回合测量次数
 
 // ---------- 固定种子的随机函数 ----------

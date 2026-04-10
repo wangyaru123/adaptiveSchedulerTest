@@ -13,7 +13,7 @@ const instance = getCurrentInstance();
 
 // 实验参数
 const cListInput = ref("0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9");
-const rounds = 10;      // 回合数
+const rounds = 50;      // 回合数
 const perRound = 20;    // 每回合测量次数
 const itemCount = ref(200);
 const moveRatio = ref(0.4);

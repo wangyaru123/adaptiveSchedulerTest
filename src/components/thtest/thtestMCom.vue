@@ -20,9 +20,7 @@ const results = ref([]);
 
 // 实验固定参数
 const N = 200; // 列表规模
-const C = 0; // 节点复杂度（轻量）
-const K = 1.0; // key 稳定性（稳定 ID）
-const ROUNDS = 10; // 回合数
+const ROUNDS = 50; // 回合数
 const PER_ROUND = 20; // 每回合测量次数
 const moveRatios = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
 
