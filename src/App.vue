@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <!-- <feedbackSimulation /> -->
+    <feedbackSimulation />
     <!-- 寻找阈值实验：场景：尾部追加一个节点（无节点移动，纯测算法本身开销） -->
     <!-- 规模取 10, 50, 100, 200, 500, 1000, 5000，记录三种策略在每种场景下分别执行20次的平均耗时 -->
     <!-- 规模n1与n2 -->
@@ -8,7 +8,7 @@
 
     <!-- 移动比例阈值mth -->
     <!-- n=200 是测试这剩余三个特征敏感性的理想规模。通过控制随机重排的比例（0%, 10%, …, 100%）产生不同移动比例，记录三种策略在每种场景下分别执行20次的平均耗时 -->
-    <thtestMCom />
+    <!-- <thtestMCom /> -->
     
     <!-- 节点复杂度cth -->
     <!-- n=200 是测试这剩余三个特征敏感性的理想规模。通过控制随机重排的比例（0%, 10%, …, 100%）产生不同移动比例，记录三种策略在每种场景下分别执行20次的平均耗时 -->
@@ -20,7 +20,7 @@
   </div>
 </template>
 <script setup>
-// import feedbackSimulation from './pages/feedbackSimulation.vue'
+import feedbackSimulation from './pages/feedbackSimulation.vue'
 
 import thtestNCom from './components/thtest/thtestNCom.vue'
 import thtestMCom from './components/thtest/thtestMCom.vue'
