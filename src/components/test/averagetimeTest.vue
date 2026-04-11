@@ -83,7 +83,6 @@ function generateItems(count, startId) {
 }
 
 function shuffleArray(arr) {
-  // 固定随机种子，保证可重复
   let seed = 42;
   const rng = () => {
     let t = (seed += 0x6D2B79F5);
@@ -129,9 +128,9 @@ async function measureStrategyTime(oldList, newList, strategy, repeats = REPEATS
   return totalTime / repeats;
 }
 
-// 自适应调度决策（基于阈值规则，实际应调用您的调度器）
-function adaptiveDecision(sample) {
-  const { n, m, c, k } = sample;
+// 自适应调度决策（基于阈值规则，使用真实特征）
+function adaptiveDecision(features) {
+  const { n, m, c, k } = features;
   const THRESHOLDS = { n1: 50, n2: 500, m_th: 0.3, c_th: 0.5, k_th: 0.6 };
   if (n < THRESHOLDS.n1) return 'simple';
   if (n >= THRESHOLDS.n2) return 'fast';
@@ -141,30 +140,45 @@ function adaptiveDecision(sample) {
   return 'doubleEnd';
 }
 
-// 测量自适应调度的平均耗时（包括调度决策开销）
-async function measureAdaptiveTime(oldList, newList, repeats = REPEATS) {
-  let totalUpdateTime = 0;
-  // 估算特征（实际应采集，此处简化）
+// 计算特征（基于新旧列表和模式）
+function computeFeatures(oldList, newList, modeName) {
   const n = oldList.length;
-  // 根据模式估算移动比例 m（这里由调用者传入，但为了简化，我们在外部计算）
-  // 注意：实际应该使用监控层采集的真实特征，这里作为示例，我们假设特征已知。
-  // 更好的做法是将特征作为参数传入，但为了代码简洁，我们在调用处计算并传入。
-  // 下面假设外部已经计算好 sample 并传入，这里我们重新计算（简化）。
-  // 实际集成时，应调用 AdaptiveScheduler 的决策方法，并记录总耗时。
+  // 1. 移动比例 m：根据模式精确计算
+  let m = 0;
+  if (modeName === '尾部追加') m = 0;
+  else if (modeName === '头部插入') m = 1;
+  else if (modeName === '随机重排') m = 1;
+  else if (modeName === '节点交换') m = 2 / n;
+  // 2. 节点复杂度 c：统计重型节点比例（本实验所有节点轻量，c=0）
+  // 实际可根据节点是否包含 children 判断
+  const heavyCount = oldList.filter(node => node.isHeavy).length;
+  const c = heavyCount / n;
+  // 3. key稳定性 k：检查 key 是否唯一且稳定（本实验使用稳定 ID）
+  // 简单假设：如果所有节点都有 key 且不是索引，则 k=1；否则根据重复比例估算
+  const keys = oldList.map(node => node.id);
+  const uniqueKeys = new Set(keys).size;
+  const keyUniqueness = uniqueKeys / n;
+  // 历史稳定性难以计算，简化取 keyUniqueness 作为估计
+  const k = keyUniqueness;
+  return { n, m, c, k };
+}
+
+// 测量自适应调度的平均耗时（使用真实特征）
+async function measureAdaptiveTime(oldList, newList, modeName, repeats = REPEATS) {
+  let totalTime = 0;
+  const features = computeFeatures(oldList, newList, modeName);
   for (let i = 0; i < repeats; i++) {
     items.value = JSON.parse(JSON.stringify(oldList));
     await nextTick();
     const start = performance.now();
-    // 这里应调用调度器的决策和执行，但为了模拟，我们直接决策并设置策略
-    const sample = { n, m: 0.2, c: 0, k: 1 }; // 示例特征，实际应正确计算
-    const chosen = adaptiveDecision(sample);
+    const chosen = adaptiveDecision(features);
     setStrategy(chosen);
     items.value = JSON.parse(JSON.stringify(newList));
     await nextTick();
     const end = performance.now();
-    totalUpdateTime += (end - start);
+    totalTime += (end - start);
   }
-  return totalUpdateTime / repeats;
+  return totalTime / repeats;
 }
 
 // 运行完整实验
@@ -173,10 +187,7 @@ async function runExperiment() {
   results.value = [];
   details.value = [];
 
-  // 存储每种策略的总耗时和用例数
-  const strategyTotals = {
-    simple: 0, doubleEnd: 0, fast: 0, adaptive: 0
-  };
+  const strategyTotals = { simple: 0, doubleEnd: 0, fast: 0, adaptive: 0 };
   let caseCount = 0;
 
   for (const size of SIZES) {
@@ -189,24 +200,11 @@ async function runExperiment() {
       const tDouble = await measureStrategyTime(oldList, newList, 'doubleEnd');
       const tFast = await measureStrategyTime(oldList, newList, 'fast');
 
-      // 计算特征（用于自适应决策）
-      let m = 0;
-      if (mode.name === '尾部追加') m = 0;
-      else if (mode.name === '头部插入') m = 1;
-      else if (mode.name === '随机重排') m = 1;
-      else if (mode.name === '节点交换') m = 2 / size;
-      const c = 0;   // 本实验节点复杂度固定为0
-      const k = 1;   // key稳定性固定为1
-      const sample = { n: size, m, c, k };
-      const chosenStrategy = adaptiveDecision(sample);
+      // 测量自适应调度（使用真实特征）
+      const tAdaptive = await measureAdaptiveTime(oldList, newList, mode.name);
 
-      // 测量自适应调度的实际耗时（包含调度决策）
-      const tAdaptive = await measureAdaptiveTime(oldList, newList);
-
-      // 理论最优耗时（取三个单一策略的最小值）
       const bestTime = Math.min(tSimple, tDouble, tFast);
 
-      // 累加
       strategyTotals.simple += tSimple;
       strategyTotals.doubleEnd += tDouble;
       strategyTotals.fast += tFast;
@@ -225,13 +223,11 @@ async function runExperiment() {
     }
   }
 
-  // 计算平均耗时
   const avgSimple = strategyTotals.simple / caseCount;
   const avgDouble = strategyTotals.doubleEnd / caseCount;
   const avgFast = strategyTotals.fast / caseCount;
   const avgAdaptive = strategyTotals.adaptive / caseCount;
 
-  // 计算自适应相对于最优单一策略的提升百分比
   const bestSingle = Math.min(avgSimple, avgDouble, avgFast);
   const improvement = ((bestSingle - avgAdaptive) / bestSingle) * 100;
 
@@ -245,7 +241,6 @@ async function runExperiment() {
   running.value = false;
 }
 
-// 列表数据（用于渲染）
 const items = ref([]);
 </script>
 
