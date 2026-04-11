@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <feedbackSimulation />
+    <!-- <feedbackSimulation /> -->
     <!-- 寻找阈值实验：场景：尾部追加一个节点（无节点移动，纯测算法本身开销） -->
     <!-- 规模取 10, 50, 100, 200, 500, 1000, 5000，记录三种策略在每种场景下分别执行20次的平均耗时 -->
     <!-- 规模n1与n2 -->
@@ -17,15 +17,24 @@
     <!-- key稳定性阈值kth -->
     <!-- <thtestKCom /> -->
 
+
+    <!-- 准确率验证实验 -->
+    <!-- <accuracyTest /> -->
+    <averagetimeTest />
+    
   </div>
 </template>
 <script setup>
+// 修正实验
 import feedbackSimulation from './pages/feedbackSimulation.vue'
-
+// 阈值实验
 import thtestNCom from './components/thtest/thtestNCom.vue'
 import thtestMCom from './components/thtest/thtestMCom.vue'
 import thtestKCom from './components/thtest/thtestKCom.vue'
 import thtestCCom from './components/thtest/thtestCCom.vue'
+// 验证实验
+import accuracyTest from './components/test/accuracyTest.vue'
+import averagetimeTest from './components/test/averagetimeTest.vue'
 
 </script>
 
